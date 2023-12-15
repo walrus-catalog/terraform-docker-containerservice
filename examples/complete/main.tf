@@ -69,7 +69,7 @@ module "this" {
         command = [
           "sh",
           "-c",
-          "echo \"$${ENV1}:$${ENV2}\" >> /var/run/dir2/logs.txt; cat /var/run/dir2/logs.txt"
+          "echo \"$${ENV1}:$${ENV2}:$${WALRUS_PROJECT_NAME}\" >> /var/run/dir2/logs.txt; cat /var/run/dir2/logs.txt"
         ]
       }
       envs = [
@@ -116,6 +116,10 @@ module "this" {
               key = "example"
             }
           }
+        },
+        { # invalid, override by default
+          name  = "WALRUS_PROJECT_NAME"
+          value = "complete"
         }
       ]
       files = [

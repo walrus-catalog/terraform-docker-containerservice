@@ -390,13 +390,14 @@ resource "docker_container" "inits" {
 
   ### configure environments.
   env = [
-    for k, v in merge(local.downward_environments,
+    for k, v in merge(
       {
         for e in try(local.container_ephemeral_envs_map[each.key], []) : e.name => e.value
       },
       {
         for e in try(local.container_refer_envs_map[each.key], []) : e.name => e.value_refer.params.name
-      }
+      },
+      local.downward_environments
     ) : format("%s=%s", k, v)
   ]
 
@@ -539,13 +540,14 @@ resource "docker_container" "runs" {
 
   ### configure environments.
   env = [
-    for k, v in merge(local.downward_environments,
+    for k, v in merge(
       {
         for e in try(local.container_ephemeral_envs_map[each.key], []) : e.name => e.value
       },
       {
         for e in try(local.container_refer_envs_map[each.key], []) : e.name => e.value_refer.params.name
-      }
+      },
+      local.downward_environments
     ) : format("%s=%s", k, v)
   ]
 
