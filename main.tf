@@ -276,7 +276,7 @@ resource "docker_container" "pause" {
   ### configure shared ipc.
   ipc_mode = "shareable"
   sysctls = try(var.deployment.sysctls != null, false) ? {
-    for c in try(nonsensitive(var.deployment.sysctls), var.deployment.sysctls) : c.name => c.value
+    for c in var.deployment.sysctls : c.name => c.value
   } : null
   ### configure shared network.
   hostname = local.name
