@@ -301,9 +301,10 @@ resource "docker_container" "pause" {
     }
   }
   ### configure execute.
-  image      = docker_image.pause.image_id
-  restart    = "always"
-  stdin_open = docker_image.pause.name == "busybox"
+  image       = docker_image.pause.image_id
+  restart     = "always"
+  stdin_open  = anytrue([strcontains(docker_image.pause.name, "busybox"), strcontains(docker_image.pause.name, "alpine")])
+  memory_swap = 0
 }
 
 ## create working docker containers.
@@ -362,7 +363,6 @@ resource "docker_container" "inits" {
   ### share from pause container.
   ipc_mode     = local.pause_container
   network_mode = local.pause_container
-  pid_mode     = local.pause_container
 
   ### configure execute.
   must_run    = false
@@ -385,7 +385,7 @@ resource "docker_container" "inits" {
   shm_size    = 64
   cpu_shares  = try(local.init_containers_map[each.key].resources != null && local.init_containers_map[each.key].resources.cpu > 0, false) ? ceil(1024 * local.init_containers_map[each.key].resources.cpu) : null
   memory      = try(local.init_containers_map[each.key].resources != null && local.init_containers_map[each.key].resources.memory > 0, false) ? local.init_containers_map[each.key].resources.memory : null
-  memory_swap = -1
+  memory_swap = try(local.init_containers_map[each.key].resources != null && local.init_containers_map[each.key].resources.memory > 0, false) ? local.init_containers_map[each.key].resources.memory : 0
   gpus        = try(local.init_containers_map[each.key].resources != null && local.init_containers_map[each.key].resources.gpus > 0, false) ? "all" : null # only all is supported at present.
 
   ### configure environments.
@@ -484,6 +484,12 @@ resource "docker_image" "runs" {
   ]
 }
 
+resource "terraform_data" "run_resources" {
+  for_each = toset(keys(try(nonsensitive(local.run_containers_map), local.run_containers_map)))
+
+  input = local.run_containers_map[each.key].resources
+}
+
 resource "terraform_data" "run_checks" {
   for_each = toset(keys(try(nonsensitive(local.run_containers_map), local.run_containers_map)))
 
@@ -512,7 +518,6 @@ resource "docker_container" "runs" {
   ### share from pause container.
   ipc_mode     = local.pause_container
   network_mode = local.pause_container
-  pid_mode     = local.pause_container
 
   ### configure execute.
   must_run    = true
@@ -535,7 +540,7 @@ resource "docker_container" "runs" {
   shm_size    = 64
   cpu_shares  = try(local.run_containers_map[each.key].resources != null && local.run_containers_map[each.key].resources.cpu > 0, false) ? ceil(1024 * local.run_containers_map[each.key].resources.cpu) : null
   memory      = try(local.run_containers_map[each.key].resources != null && local.run_containers_map[each.key].resources.memory > 0, false) ? local.run_containers_map[each.key].resources.memory : null
-  memory_swap = -1
+  memory_swap = try(local.run_containers_map[each.key].resources != null && local.run_containers_map[each.key].resources.memory > 0, false) ? local.run_containers_map[each.key].resources.memory : 0
   gpus        = try(local.run_containers_map[each.key].resources != null && local.run_containers_map[each.key].resources.gpus > 0, false) ? "all" : null # only all is supported at present.
 
   ### configure environments.
@@ -633,6 +638,7 @@ resource "docker_container" "runs" {
   lifecycle {
     replace_triggered_by = [
       docker_container.pause,
+      terraform_data.run_resources[each.key],
       terraform_data.run_checks[each.key]
     ]
   }
