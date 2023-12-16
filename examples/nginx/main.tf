@@ -67,6 +67,16 @@ module "this" {
   <h1>Welcome to Docker Container Service.</h1>
 </html>
 EOF
+        },
+        {
+          path    = "/usr/share/nginx/html/again.html"
+          content = <<-EOF
+<html>
+  <h1>Hi</h1>
+  </br>
+  <h1>Welcome to Docker Container Service Again.</h1>
+</html>
+EOF
         }
       ]
       ports = [
