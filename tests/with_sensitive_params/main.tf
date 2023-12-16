@@ -50,8 +50,14 @@ module "this" {
           "cp /var/run/dir1/logs.txt /var/run/dir2/; cat /var/run/dir2/logs.txt"
         ]
       }
+      envs = [
+        {
+          name  = sensitive("ENV1") # sensitive value
+          value = "VALUE1"
+        }
+      ]
       resources = {
-        cpu    = 0.1
+        cpu    = sensitive(0.1) # sensitive value
         memory = 100
       }
       files = [
@@ -76,6 +82,12 @@ module "this" {
         cpu    = 0.1
         memory = sensitive(100) # sensitive value
       }
+      envs = [
+        {
+          name  = "ENV1"
+          value = sensitive("VALUE1") # sensitive value
+        }
+      ]
       files = [
         {
           path    = "/usr/share/nginx/html/index.html"
@@ -113,7 +125,6 @@ module "this" {
     }
   ]
 }
-
 output "context" {
   value = module.this.context
 }
