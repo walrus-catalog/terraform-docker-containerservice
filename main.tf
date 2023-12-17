@@ -311,6 +311,7 @@ resource "docker_container" "pause" {
 
 locals {
   pause_container = format("container:%s", docker_container.pause.id)
+
   downward_environments = {
     "WALRUS_PROJECT_ID"       = local.project_id
     "WALRUS_ENVIRONMENT_ID"   = local.environment_id
@@ -318,6 +319,31 @@ locals {
     "WALRUS_PROJECT_NAME"     = local.project_name
     "WALRUS_ENVIRONMENT_NAME" = local.environment_name
     "WALRUS_RESOURCE_NAME"    = local.resource_name
+  }
+
+  container_mapping_ephemeral_files_map = {
+    for n, fs in local.container_ephemeral_files_map : n => {
+      changed = [
+        for f in fs : f
+        if f.accept_changed
+      ]
+      no_changed = [
+        for f in fs : f
+        if !f.accept_changed
+      ]
+    }
+  }
+  container_mapping_refer_files_map = {
+    for n, fs in local.container_refer_files_map : n => {
+      changed = [
+        for f in fs : f
+        if f.accept_changed
+      ]
+      no_changed = [
+        for f in fs : f
+        if !f.accept_changed
+      ]
+    }
   }
 }
 
@@ -403,7 +429,7 @@ resource "docker_container" "inits" {
 
   ### configure ephemeral files.
   dynamic "mounts" {
-    for_each = try(try(nonsensitive(local.container_ephemeral_files_map[each.key]), local.container_ephemeral_files_map[each.key]), [])
+    for_each = try(try(nonsensitive(local.container_mapping_ephemeral_files_map[each.key].changed), local.container_mapping_ephemeral_files_map[each.key].changed), [])
     content {
       type      = "bind"
       source    = abspath(local_file.ephemeral_files[mounts.value.name].filename)
@@ -411,15 +437,29 @@ resource "docker_container" "inits" {
       read_only = true
     }
   }
+  dynamic "upload" {
+    for_each = try(try(nonsensitive(local.container_mapping_ephemeral_files_map[each.key].no_changed), local.container_mapping_ephemeral_files_map[each.key].no_changed), [])
+    content {
+      source = abspath(local_file.ephemeral_files[upload.value.name].filename)
+      file   = upload.value.path
+    }
+  }
 
   ### configure refer files.
   dynamic "mounts" {
-    for_each = try(try(nonsensitive(local.container_refer_files_map[each.key]), local.container_refer_files_map[each.key]), [])
+    for_each = try(try(nonsensitive(local.container_mapping_refer_files_map[each.key].changed), local.container_mapping_refer_files_map[each.key].changed), [])
     content {
       type      = "bind"
       source    = abspath(mounts.value.content_refer.params.path)
       target    = mounts.value.path
       read_only = true
+    }
+  }
+  dynamic "upload" {
+    for_each = try(try(nonsensitive(local.container_mapping_refer_files_map[each.key].no_changed), local.container_mapping_refer_files_map[each.key].no_changed), [])
+    content {
+      source = abspath(upload.value.content_refer.params.path)
+      file   = upload.value.path
     }
   }
 
@@ -558,23 +598,37 @@ resource "docker_container" "runs" {
 
   ### configure ephemeral files.
   dynamic "mounts" {
-    for_each = try(try(nonsensitive(local.container_ephemeral_files_map[each.key]), local.container_ephemeral_files_map[each.key]), [])
+    for_each = try(try(nonsensitive(local.container_mapping_ephemeral_files_map[each.key].changed), local.container_mapping_ephemeral_files_map[each.key].changed), [])
     content {
       type      = "bind"
-      source    = local_file.ephemeral_files[mounts.value.name].filename
+      source    = abspath(local_file.ephemeral_files[mounts.value.name].filename)
       target    = mounts.value.path
       read_only = true
+    }
+  }
+  dynamic "upload" {
+    for_each = try(try(nonsensitive(local.container_mapping_ephemeral_files_map[each.key].no_changed), local.container_mapping_ephemeral_files_map[each.key].no_changed), [])
+    content {
+      source = abspath(local_file.ephemeral_files[upload.value.name].filename)
+      file   = upload.value.path
     }
   }
 
   ### configure refer files.
   dynamic "mounts" {
-    for_each = try(try(nonsensitive(local.container_refer_files_map[each.key]), local.container_refer_files_map[each.key]), [])
+    for_each = try(try(nonsensitive(local.container_mapping_refer_files_map[each.key].changed), local.container_mapping_refer_files_map[each.key].changed), [])
     content {
       type      = "bind"
-      source    = mounts.value.content_refer.params.path
+      source    = abspath(mounts.value.content_refer.params.path)
       target    = mounts.value.path
       read_only = true
+    }
+  }
+  dynamic "upload" {
+    for_each = try(try(nonsensitive(local.container_mapping_refer_files_map[each.key].no_changed), local.container_mapping_refer_files_map[each.key].no_changed), [])
+    content {
+      source = abspath(upload.value.content_refer.params.path)
+      file   = upload.value.path
     }
   }
 

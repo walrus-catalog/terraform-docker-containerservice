@@ -21,7 +21,7 @@ provider "docker" {
 }
 
 resource "docker_network" "example" {
-  name = format("example-%s", replace(uuid(), "-", ""))
+  name = "complete-svc"
 
   attachable      = true
   check_duplicate = true
@@ -124,11 +124,13 @@ module "this" {
       ]
       files = [
         { # ephemeral
-          path    = "/var/run/config/file1"
-          content = "this is ephemeral file" # accept changed but not restart
+          path           = "/var/run/config/file1"
+          accept_changed = true
+          content        = "this is ephemeral file"
         },
-        {                                      # refer
-          path = "/var/run/config-refer/file2" # donot accpet changed
+        { # refer
+          path           = "/var/run/config-refer/file2"
+          accept_changed = false
           content_refer = {
             schema = "docker:localfile"
             params = {
@@ -270,8 +272,9 @@ EOF
       ]
       files = [
         {
-          path    = "/usr/share/nginx/html/index.html"
-          content = <<-EOF
+          path           = "/usr/share/nginx/html/index.html"
+          accept_changed = true
+          content        = <<-EOF
 <html>
   <h1>Hi</h1>
   </br>
@@ -280,8 +283,9 @@ EOF
 EOF
         },
         {
-          path    = "/etc/nginx/templates/default.conf.template"
-          content = <<-EOF
+          path           = "/etc/nginx/templates/default.conf.template"
+          accept_changed = false
+          content        = <<-EOF
 server {
   listen       $${NGINX_PORT};
   server_name  localhost;

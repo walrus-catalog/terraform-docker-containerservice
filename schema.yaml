@@ -463,10 +463,19 @@ components:
                   Configure the files.
                 items:
                   properties:
+                    accept_changed:
+                      default: false
+                      description: |-
+                        Specify whether to accept the changed of the (configuration) file.
+                        Value changes will be propagated but will not restart the container.
+                      nullable: true
+                      title: Accept Changed
+                      type: boolean
+                      x-walrus-ui:
+                        order: 5
                     content:
                       description: |
                         Specify the content of the (configuration) file.
-                        Value source changes will be propagated but will not restart the container.
                       nullable: true
                       title: Content
                       type: string
@@ -512,6 +521,7 @@ components:
                       type: string
                       x-walrus-ui:
                         colSpan: 6
+                        hidden: true
                         order: 2
                     path:
                       description: |

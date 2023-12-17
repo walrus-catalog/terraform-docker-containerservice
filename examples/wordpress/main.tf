@@ -21,7 +21,7 @@ provider "docker" {
 }
 
 resource "docker_network" "example" {
-  name = format("example-%s", replace(uuid(), "-", ""))
+  name = "wordpress-svc"
 
   attachable      = true
   check_duplicate = true
