@@ -61,12 +61,23 @@ module "this" {
         {
           type     = "http"
           delay    = 10
+          teardown = true
           retries  = 3
           interval = 30
           timeout  = 2
           http = {
             port = 3000
             path = "/robots.txt"
+          }
+        },
+        { # covered by the previous check.
+          type     = "http"
+          retries  = 3
+          interval = 10
+          timeout  = 1
+          teardown = true
+          http = {
+            port = 3000
           }
         }
       ]

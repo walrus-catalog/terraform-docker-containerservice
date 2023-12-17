@@ -88,8 +88,9 @@ EOF
       ]
       checks = [
         {
-          type  = "http"
-          delay = 10
+          type     = "http"
+          delay    = 10
+          teardown = true
           http = {
             port = 80
             headers = {

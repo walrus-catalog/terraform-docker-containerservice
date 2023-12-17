@@ -260,7 +260,7 @@ locals {
 }
 
 resource "docker_container" "pause" {
-  name = local.fullname
+  name = join("-", [local.fullname, "pause"])
   labels {
     label = "walrus.seal.io/container-name"
     value = "pause"
@@ -305,6 +305,65 @@ resource "docker_container" "pause" {
   restart     = "always"
   stdin_open  = anytrue([strcontains(docker_image.pause.name, "busybox"), strcontains(docker_image.pause.name, "alpine")])
   memory_swap = 0
+}
+
+## create unhealthy restart docker container.
+
+locals {
+  unhealthy_restart = try(length([
+    for c in local.run_containers : c
+    if try(length(c.checks) > 0 && c.checks[0].teardown, false)
+  ]) > 0, false)
+  unhealthy_restart_label = format("walrus.seal.io/healthcheck-%s", local.fullname)
+}
+
+data "docker_registry_image" "unhealthy_restart" {
+  count = local.unhealthy_restart ? 1 : 0
+
+  name = var.infrastructure.unhealthy_restart_image
+}
+
+resource "docker_image" "unhealthy_restart" {
+  count = local.unhealthy_restart ? 1 : 0
+
+  name = var.infrastructure.unhealthy_restart_image
+
+  keep_locally  = true
+  pull_triggers = [data.docker_registry_image.unhealthy_restart[0].sha256_digest]
+}
+
+resource "docker_container" "unhealthy_restart" {
+  count = local.unhealthy_restart ? 1 : 0
+
+  name = join("-", [local.fullname, "unhealthy-restart"])
+  labels {
+    label = "walrus.seal.io/container-name"
+    value = "unhealthy-restart"
+  }
+
+  ### share from pause container.
+  ipc_mode     = local.pause_container
+  network_mode = local.pause_container
+
+  ### configure execute.
+  must_run = true
+  restart  = "always"
+  image    = docker_image.unhealthy_restart[0].image_id
+
+  ### configure resources.
+  shm_size = 64
+
+  ### configure environments.
+  env = [
+    "AUTOHEAL_CONTAINER_LABEL=${local.unhealthy_restart_label}"
+  ]
+
+  ### configure host mounts.
+  mounts {
+    type   = "bind"
+    source = "/var/run/docker.sock"
+    target = "/var/run/docker.sock"
+  }
 }
 
 ## create working docker containers.
@@ -552,6 +611,13 @@ resource "docker_container" "runs" {
     content {
       label = labels.key
       value = labels.value
+    }
+  }
+  dynamic "labels" {
+    for_each = local.unhealthy_restart ? [{}] : []
+    content {
+      label = local.unhealthy_restart_label
+      value = "true"
     }
   }
 

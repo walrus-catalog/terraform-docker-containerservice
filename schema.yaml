@@ -35,23 +35,39 @@ components:
           properties:
             domain_suffix:
               default: cluster.local
+              description: |
+                Specify the domain name for discovering the service.
               nullable: true
               title: Domain Suffix
               type: string
               x-walrus-ui:
                 order: 2
             network_id:
+              description: |
+                Specify the ID of the Docker network where the service applies.
               title: Network Id
               type: string
               x-walrus-ui:
                 order: 1
             pause_image:
               default: docker/desktop-kubernetes-pause:3.9
+              description: "Specify the image of the pause container, \nwhich for
+                allow worker containers crashing or restarting without losing the
+                network.\n"
               nullable: true
               title: Pause Image
               type: string
               x-walrus-ui:
                 order: 3
+            unhealthy_restart_image:
+              default: willfarrell/autoheal:latest
+              description: "Specify the image of the restart container, \nwhich for
+                restart unhealthy containers, https://github.com/moby/moby/pull/22719.\n"
+              nullable: true
+              title: Pause Image
+              type: string
+              x-walrus-ui:
+                order: 4
           x-walrus-ui:
             colSpan: 12
             group: Advanced
@@ -119,6 +135,7 @@ components:
               checks:
                 description: |
                   Configure the healthz checks.
+                  Only allow configuring at most one check.
                 items:
                   properties:
                     delay:
@@ -286,7 +303,6 @@ components:
                       type: boolean
                       x-walrus-ui:
                         colSpan: 4
-                        hidden: true
                         order: 7
                     timeout:
                       default: 1

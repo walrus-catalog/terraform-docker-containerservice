@@ -246,13 +246,14 @@ EOF
       ]
       checks = [
         {
-          type  = "tcp"
-          delay = 10
+          type     = "tcp"
+          delay    = 10
+          teardown = true
           tcp = {
             port = 80
           }
         },
-        { # invalid, donot work.
+        { # covered by the previous check.
           type = "http"
           http = {
             port = 80
