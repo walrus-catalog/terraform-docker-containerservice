@@ -50,10 +50,3 @@ output "ports" {
   description = "The port list of the service."
   value       = length(local.external_ports) > 0 ? try(nonsensitive(local.external_ports[*].external), local.external_ports[*].external) : []
 }
-
-## UI display
-
-output "endpoints" {
-  description = "The endpoints, a list of string combined host and port."
-  value       = local.endpoints
-}
