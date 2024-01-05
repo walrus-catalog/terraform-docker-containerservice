@@ -465,6 +465,7 @@ resource "docker_container" "inits" {
     try(local.init_containers_map[each.key].execute.as_user == null && local.init_containers_map[each.key].execute.as_group != null, false) ? local.init_containers_map[each.key].execute.as_group : null,
     try(var.deployment.fs_group, null)
   ]) : null
+  privileged = try(local.init_containers_map[each.key].execute.privileged, null)
 
   ### configure resources.
   shm_size    = 64
@@ -493,14 +494,15 @@ resource "docker_container" "inits" {
       type      = "bind"
       source    = abspath(local_file.ephemeral_files[mounts.value.name].filename)
       target    = mounts.value.path
-      read_only = true
+      read_only = try(anytrue([floor(tonumber(mounts.value.mode) / 100) % 2 != 1, floor(tonumber(mounts.value.mode) / 10) % 2 != 1, tonumber(mounts.value.mode) % 2 != 1]), true)
     }
   }
   dynamic "upload" {
     for_each = try(try(nonsensitive(local.container_mapping_ephemeral_files_map[each.key].no_changed), local.container_mapping_ephemeral_files_map[each.key].no_changed), [])
     content {
-      source = abspath(local_file.ephemeral_files[upload.value.name].filename)
-      file   = upload.value.path
+      source     = abspath(local_file.ephemeral_files[upload.value.name].filename)
+      file       = upload.value.path
+      executable = try(floor(tonumber(upload.value.mode) / 100) % 2 == 1, false)
     }
   }
 
@@ -511,14 +513,15 @@ resource "docker_container" "inits" {
       type      = "bind"
       source    = abspath(mounts.value.content_refer.params.path)
       target    = mounts.value.path
-      read_only = true
+      read_only = try(anytrue([floor(tonumber(mounts.value.mode) / 100) % 2 != 1, floor(tonumber(mounts.value.mode) / 10) % 2 != 1, tonumber(mounts.value.mode) % 2 != 1]), true)
     }
   }
   dynamic "upload" {
     for_each = try(try(nonsensitive(local.container_mapping_refer_files_map[each.key].no_changed), local.container_mapping_refer_files_map[each.key].no_changed), [])
     content {
-      source = abspath(upload.value.content_refer.params.path)
-      file   = upload.value.path
+      source     = abspath(upload.value.content_refer.params.path)
+      file       = upload.value.path
+      executable = try(floor(tonumber(upload.value.mode) / 100) % 2 == 1, false)
     }
   }
 
@@ -551,7 +554,7 @@ resource "docker_container" "inits" {
   ]
   lifecycle {
     postcondition {
-      condition     = self.exit_code == 0
+      condition     = try(self.exit_code == null || self.exit_code == 0, true)
       error_message = "Init container must exit with code 0"
     }
     replace_triggered_by = [
@@ -641,6 +644,7 @@ resource "docker_container" "runs" {
     try(local.run_containers_map[each.key].execute.as_user == null && local.run_containers_map[each.key].execute.as_group != null, false) ? local.run_containers_map[each.key].execute.as_group : null,
     try(var.deployment.fs_group, null)
   ]) : null
+  privileged = try(local.run_containers_map[each.key].execute.privileged, null)
 
   ### configure resources.
   shm_size    = 64
@@ -669,14 +673,15 @@ resource "docker_container" "runs" {
       type      = "bind"
       source    = abspath(local_file.ephemeral_files[mounts.value.name].filename)
       target    = mounts.value.path
-      read_only = true
+      read_only = try(anytrue([floor(tonumber(mounts.value.mode) / 100) % 2 != 1, floor(tonumber(mounts.value.mode) / 10) % 2 != 1, tonumber(mounts.value.mode) % 2 != 1]), true)
     }
   }
   dynamic "upload" {
     for_each = try(try(nonsensitive(local.container_mapping_ephemeral_files_map[each.key].no_changed), local.container_mapping_ephemeral_files_map[each.key].no_changed), [])
     content {
-      source = abspath(local_file.ephemeral_files[upload.value.name].filename)
-      file   = upload.value.path
+      source     = abspath(local_file.ephemeral_files[upload.value.name].filename)
+      file       = upload.value.path
+      executable = try(floor(tonumber(upload.value.mode) / 100) % 2 == 1, false)
     }
   }
 
@@ -687,14 +692,15 @@ resource "docker_container" "runs" {
       type      = "bind"
       source    = abspath(mounts.value.content_refer.params.path)
       target    = mounts.value.path
-      read_only = true
+      read_only = try(anytrue([floor(tonumber(mounts.value.mode) / 100) % 2 != 1, floor(tonumber(mounts.value.mode) / 10) % 2 != 1, tonumber(mounts.value.mode) % 2 != 1]), true)
     }
   }
   dynamic "upload" {
     for_each = try(try(nonsensitive(local.container_mapping_refer_files_map[each.key].no_changed), local.container_mapping_refer_files_map[each.key].no_changed), [])
     content {
-      source = abspath(upload.value.content_refer.params.path)
-      file   = upload.value.path
+      source     = abspath(upload.value.content_refer.params.path)
+      file       = upload.value.path
+      executable = try(floor(tonumber(upload.value.mode) / 100) % 2 == 1, false)
     }
   }
 
@@ -735,16 +741,17 @@ resource "docker_container" "runs" {
         healthcheck.value.execute.command
         ]) : try(healthcheck.value.type == "tcp", false) ? [
         "CMD", "sh", "-c",
-        format("netstat -an | grep %d > /dev/null || exit 1",
-          healthcheck.value.tcp.port
+        format("if [ `command -v netstat` ]; then netstat -an | grep -w %d > /dev/null || exit 1; else cat /etc/services | grep -w %d/tcp > /dev/null || exit 1 ; fi",
+          healthcheck.value.tcp.port,
+          healthcheck.value.tcp.port,
         )] : try(healthcheck.value.type == "http", false) ? [
         "CMD", "sh", "-c",
-        format("if [ `command -v curl` ]; then curl -fsSL -o /dev/null %s localhost:%d%s; else wget -q -O /dev/null %s localhost:%d%s; fi",
+        format("if [ `command -v curl` ]; then curl -fsSL -o /dev/null %s http://localhost:%d%s; else wget -q -O /dev/null %s http://localhost:%d%s; fi",
           try(join(" ", [for k, v in healthcheck.value.http.headers : format("--header '%s: %s'", k, v)]), ""), try(healthcheck.value.http.port, 80), try(healthcheck.value.http.path, "/"),
           try(join(" ", [for k, v in healthcheck.value.http.headers : format("--header '%s: %s'", k, v)]), ""), try(healthcheck.value.http.port, 80), try(healthcheck.value.http.path, "/"),
         )] : try(healthcheck.value.type == "https", false) ? [
         "CMD", "sh", "-c",
-        format("if [ `command -v curl` ]; then curl -fsSL -o /dev/null %s localhost:%d%s; else wget -q -O /dev/null %s localhost:%d%s; fi",
+        format("if [ `command -v curl` ]; then curl -kfsSL -o /dev/null %s https://localhost:%d%s; else wget --no-check-certificate -q -O /dev/null %s https://localhost:%d%s; fi",
           try(join(" ", [for k, v in healthcheck.value.https.headers : format("--header '%s: %s'", k, v)]), ""), try(healthcheck.value.https.port, 443), try(healthcheck.value.https.path, "/"),
           try(join(" ", [for k, v in healthcheck.value.https.headers : format("--header '%s: %s'", k, v)]), ""), try(healthcheck.value.https.port, 443), try(healthcheck.value.https.path, "/"),
       )] : null

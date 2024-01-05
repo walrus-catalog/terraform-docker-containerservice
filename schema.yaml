@@ -435,6 +435,15 @@ components:
                     x-walrus-ui:
                       colSpan: 12
                       order: 1
+                  privileged:
+                    default: false
+                    description: |
+                      Specify whether to run the container as privileged.
+                    nullable: true
+                    title: Privileged
+                    type: boolean
+                    x-walrus-ui:
+                      order: 7
                   readonly_rootfs:
                     default: false
                     description: |
@@ -470,6 +479,7 @@ components:
                         Specify whether to accept the changed of the (configuration) file.
                         Value changes will be propagated but will not restart the container.
                       nullable: true
+                      readOnly: true
                       title: Accept Changed
                       type: boolean
                       x-walrus-ui:
@@ -515,6 +525,9 @@ components:
                       default: "0644"
                       description: |
                         Specify the mode of the (configuration) file, default is 0644.
+                      enum:
+                      - "0644"
+                      - "0744"
                       maxLength: 4
                       minLength: 4
                       nullable: true
