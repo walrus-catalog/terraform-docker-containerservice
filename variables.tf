@@ -35,14 +35,14 @@ Specify the infrastructure information for deploying.
 Examples:
 ```
 infrastructure:
-  network_id: string
+  network_id: string, optional
   domain_suffix: string, optional
   pause_image: string, optional              # keep worker containers crashing or restarting without losing the network.
   unhealthy_restart_image: string, optional  # restart the unhealthy containers, https://github.com/moby/moby/pull/22719.
 ```
 EOF
   type = object({
-    network_id              = string
+    network_id              = optional(string, "local-walrus")
     domain_suffix           = optional(string, "cluster.local")
     pause_image             = optional(string, "docker/desktop-kubernetes-pause:3.9")
     unhealthy_restart_image = optional(string, "willfarrell/autoheal:latest")
