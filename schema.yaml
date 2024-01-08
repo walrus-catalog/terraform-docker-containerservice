@@ -14,6 +14,11 @@ components:
           type: object
           description: |
             Specify the infrastructure information for deploying.
+          default:
+            domain_suffix: cluster.local
+            network_id: local-walrus
+            pause_image: docker/desktop-kubernetes-pause:3.9
+            unhealthy_restart_image: willfarrell/autoheal:latest
           required:
           - network_id
           properties:

@@ -47,6 +47,12 @@ EOF
     pause_image             = optional(string, "docker/desktop-kubernetes-pause:3.9")
     unhealthy_restart_image = optional(string, "willfarrell/autoheal:latest")
   })
+  default = {
+    network_id              = "local-walrus"
+    domain_suffix           = "cluster.local"
+    pause_image             = "docker/desktop-kubernetes-pause:3.9"
+    unhealthy_restart_image = "willfarrell/autoheal:latest"
+  }
 }
 
 #
