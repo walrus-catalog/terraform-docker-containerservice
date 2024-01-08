@@ -7,7 +7,6 @@ components:
       type: object
       required:
       - containers
-      - infrastructure
       properties:
         infrastructure:
           title: Infrastructure
