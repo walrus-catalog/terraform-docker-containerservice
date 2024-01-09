@@ -652,7 +652,8 @@ components:
                   properties:
                     external:
                       description: |
-                        Specify the external port of the service. If not specified, the port is not exposed.
+                        Specify the external port of the service.
+                        This value occurs the port mapping on the host, and be used for external communication.
                       maximum: 65535
                       minimum: 1
                       nullable: true
@@ -663,7 +664,8 @@ components:
                         order: 2
                     internal:
                       description: |
-                        Specify the internal port of the service, which is used for inter-container communication.
+                        Specify the internal port of the service.
+                        This value indicates which port the container is serving, and be used for inter-container communication.
                       maximum: 65535
                       minimum: 1
                       title: Internal
@@ -684,6 +686,13 @@ components:
                       x-walrus-ui:
                         colSpan: 4
                         order: 3
+                    schema:
+                      description: |
+                        Specify the schema of the port, which is used for generating the publish endpoint URL list.
+                      title: Schema
+                      type: string
+                      x-walrus-ui:
+                        order: 4
                   required:
                   - internal
                   type: object
@@ -758,6 +767,7 @@ components:
             colSpan: 12
             group: Basic
             order: 4
+            widget: ""
       x-walrus-ui:
         groupOrder:
         - Basic
