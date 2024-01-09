@@ -86,6 +86,7 @@ locals {
               internal = p.internal
               external = p.external
               protocol = p.protocol == null ? "TCP" : upper(p.protocol)
+              schema   = p.schema == null ? (contains([80, 8080], p.internal) ? "http" : (contains([443, 8443], p.internal) ? "https" : null)) : lower(p.schema)
             }...
             if p != null
           } : ps[length(ps) - 1]
@@ -251,7 +252,7 @@ resource "docker_image" "pause" {
 }
 
 locals {
-  external_ports = flatten([
+  publish_ports = flatten([
     for c in local.containers : [
       for p in c.ports : p
       if try(p.external != null, false)
@@ -294,7 +295,7 @@ resource "docker_container" "pause" {
     ]
   }
   dynamic "ports" {
-    for_each = try(nonsensitive(local.external_ports), local.external_ports)
+    for_each = try(nonsensitive(local.publish_ports), local.publish_ports)
     content {
       internal = ports.value.internal
       external = ports.value.external

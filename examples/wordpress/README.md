@@ -52,6 +52,7 @@ No inputs.
 | <a name="output_address"></a> [address](#output\_address) | n/a |
 | <a name="output_connection"></a> [connection](#output\_connection) | n/a |
 | <a name="output_context"></a> [context](#output\_context) | n/a |
+| <a name="output_endpoints"></a> [endpoints](#output\_endpoints) | n/a |
 | <a name="output_ports"></a> [ports](#output\_ports) | n/a |
 | <a name="output_refer"></a> [refer](#output\_refer) | n/a |
 <!-- END_TF_DOCS -->

@@ -53,6 +53,10 @@ No inputs.
 | <a name="output_address"></a> [address](#output\_address) | n/a |
 | <a name="output_connection"></a> [connection](#output\_connection) | n/a |
 | <a name="output_context"></a> [context](#output\_context) | n/a |
+| <a name="output_endpoints"></a> [endpoints](#output\_endpoints) | n/a |
+| <a name="output_endpoints_casdoor"></a> [endpoints\_casdoor](#output\_endpoints\_casdoor) | n/a |
+| <a name="output_endpoints_postgres"></a> [endpoints\_postgres](#output\_endpoints\_postgres) | n/a |
+| <a name="output_endpoints_redis"></a> [endpoints\_redis](#output\_endpoints\_redis) | n/a |
 | <a name="output_ports"></a> [ports](#output\_ports) | n/a |
 | <a name="output_refer"></a> [refer](#output\_refer) | n/a |
 <!-- END_TF_DOCS -->
