@@ -68,7 +68,7 @@ locals {
     for xp in [
       for p in local.publish_ports : p
       if p.schema != null
-    ] : format("%s:%d:%d", try(nonsensitive(xp.schema), xp.schema), try(nonsensitive(xp.external), xp.external), try(nonsensitive(xp.internal), xp.internal)) =>
+    ] : format("%d:%d/%s", try(nonsensitive(xp.external), xp.external), try(nonsensitive(xp.internal), xp.internal), try(nonsensitive(xp.schema), xp.schema)) =>
     format("%s://localhost:%d", try(nonsensitive(xp.schema), xp.schema), try(nonsensitive(xp.external), xp.external))
   } : {}
 }

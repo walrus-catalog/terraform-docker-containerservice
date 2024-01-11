@@ -689,7 +689,8 @@ components:
                     schema:
                       description: |
                         Specify the schema of the port, which is used for generating the publish endpoint URL list.
-                      title: Schema
+                        This value should be an Application Layer Protocol, see https://en.wikipedia.org/wiki/Application_layer.
+                      title: Schema(Application Layer Protocol)
                       type: string
                       x-walrus-ui:
                         order: 4
