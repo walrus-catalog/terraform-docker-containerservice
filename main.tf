@@ -603,6 +603,12 @@ resource "terraform_data" "run_checks" {
   ], 0, 1), [])
 }
 
+resource "terraform_data" "run_executes" {
+  for_each = toset(keys(try(nonsensitive(local.run_containers_map), local.run_containers_map)))
+
+  input = local.run_containers_map[each.key].execute
+}
+
 resource "docker_container" "runs" {
   for_each = toset(keys(try(nonsensitive(local.run_containers_map), local.run_containers_map)))
 
@@ -768,7 +774,8 @@ resource "docker_container" "runs" {
     replace_triggered_by = [
       docker_container.pause,
       terraform_data.run_resources[each.key],
-      terraform_data.run_checks[each.key]
+      terraform_data.run_checks[each.key],
+      terraform_data.run_executes[each.key]
     ]
   }
 }

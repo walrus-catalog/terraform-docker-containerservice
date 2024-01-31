@@ -90,6 +90,7 @@ No modules.
 | [local_file.ephemeral_files](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
 | [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [terraform_data.run_checks](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
+| [terraform_data.run_executes](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.run_resources](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [docker_network.network](https://registry.terraform.io/providers/kreuzwerker/docker/latest/docs/data-sources/network) | data source |
 | [docker_registry_image.inits](https://registry.terraform.io/providers/kreuzwerker/docker/latest/docs/data-sources/registry_image) | data source |
